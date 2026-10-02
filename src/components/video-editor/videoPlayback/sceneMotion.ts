@@ -7,11 +7,19 @@ import {
 	SNAP_TO_EDGES_RATIO_AUTO,
 } from "./cursorFollowCamera";
 import { findDominantRegion } from "./zoomRegionUtils";
+import { resolveRegion3DState, ZERO_CAMERA_3D_STATE, type Camera3DState } from "./camera3d";
 
 export type SceneZoomTarget = {
 	scale: number;
 	focus: ZoomFocus;
 	progress: number;
+	/**
+	 * The dominant region's 3D move, already resolved. Present on every target
+	 * so all three renderers (preview and both exporters) read the 3D state
+	 * from this one shared resolver rather than re-deriving it from the region
+	 * list — that is what keeps preview and export in agreement.
+	 */
+	move3d: Camera3DState;
 };
 
 export type PreviewMotionMode = "spring" | "snap" | "preserve";
@@ -88,7 +96,7 @@ export function resolveSceneZoomTarget({
 	});
 
 	if (!region || strength <= 0) {
-		return { scale: 1, focus: DEFAULT_FOCUS, progress: 0 };
+		return { scale: 1, focus: DEFAULT_FOCUS, progress: 0, move3d: ZERO_CAMERA_3D_STATE };
 	}
 
 	const scale = blendedScale ?? ZOOM_DEPTH_SCALES[region.depth];
@@ -110,5 +118,5 @@ export function resolveSceneZoomTarget({
 		);
 	}
 
-	return { scale, focus, progress: strength };
+	return { scale, focus, progress: strength, move3d: resolveRegion3DState(region.move3d) };
 }

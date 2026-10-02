@@ -115,9 +115,15 @@ import { PreviewVideoSource } from "./videoPlayback/previewVideoSource";
 import { usePreviewVideoReady } from "./videoPlayback/usePreviewVideoReady";
 import { getSceneEffectMetrics } from "./videoPlayback/sceneEffects";
 import {
+	applyCamera3DTransform,
+	createCamera3DContainer,
+	ZERO_CAMERA_3D_STATE,
+} from "./videoPlayback/camera3d";
+import {
 	resolvePreviewMotionMode,
 	resolveSceneZoomTarget,
 	shouldComposePreviewFrame,
+	type SceneZoomTarget,
 } from "./videoPlayback/sceneMotion";
 import {
 	getWebcamMediaTargetTimeSeconds,
@@ -391,6 +397,14 @@ const VideoPlayback = forwardRef<VideoPlaybackRef, VideoPlaybackProps>(
 		const zoomBlurFilterRef = useRef<ZoomBlurFilter | null>(null);
 		const motionBlurFilterRef = useRef<MotionBlurFilter | null>(null);
 		const cameraContainerRef = useRef<Container | null>(null);
+		const tiltContainerRef = useRef<Container | null>(null);
+		// Last resolved scene target, read by applyTransform for the 3D state.
+		const zoomTargetRef = useRef<SceneZoomTarget>({
+			scale: 1,
+			focus: { cx: 0.5, cy: 0.5 },
+			progress: 0,
+			move3d: ZERO_CAMERA_3D_STATE,
+		});
 		const [pixiReady, setPixiReady] = useState(false);
 		const videoReady = usePreviewVideoReady(videoRef, videoPath);
 
@@ -1758,10 +1772,17 @@ const VideoPlayback = forwardRef<VideoPlaybackRef, VideoPlaybackProps>(
 				appRef.current = app;
 				container.appendChild(app.canvas);
 
+				// Tilt container — sits between the stage and the camera so the 3D
+				// transform and the zoom transform are written to different nodes
+				// and cannot overwrite each other.
+				const tiltContainer = createCamera3DContainer();
+				tiltContainerRef.current = tiltContainer;
+				app.stage.addChild(tiltContainer);
+
 				// Camera container - this will be scaled/positioned for zoom
 				const cameraContainer = new Container();
 				cameraContainerRef.current = cameraContainer;
-				app.stage.addChild(cameraContainer);
+				tiltContainer.addChild(cameraContainer);
 
 				// Match the export scene graph so zoom motion blur is applied to the
 				// same layer in preview and export.
@@ -1979,6 +2000,24 @@ const VideoPlayback = forwardRef<VideoPlaybackRef, VideoPlaybackProps>(
 
 				const state = animationStateRef.current;
 
+				// 3D tilt rides the zoom's own progress, so a tilt eases in and out
+				// with the move instead of snapping on at the region boundary. The
+				// state comes from resolveSceneZoomTarget, the same shared resolver
+				// the exporters use, so preview and export cannot disagree.
+				const tiltContainer = tiltContainerRef.current;
+				if (tiltContainer) {
+					const region3d = zoomTargetRef.current.move3d;
+					const tilt =
+						region3d.rotateX === 0 && region3d.rotateY === 0
+							? ZERO_CAMERA_3D_STATE
+							: {
+									rotateY: region3d.rotateY * state.progress,
+									rotateX: region3d.rotateX * state.progress,
+									perspective: region3d.perspective,
+								};
+					applyCamera3DTransform(tiltContainer, tilt, stageSizeRef.current);
+				}
+
 				const appliedTransform = applyZoomTransform({
 					cameraContainer,
 					zoomBlurFilter: zoomBlurFilterRef.current,
@@ -2062,6 +2101,7 @@ const VideoPlayback = forwardRef<VideoPlaybackRef, VideoPlaybackProps>(
 					cursorTelemetry: cursorTelemetryRef.current,
 					cursorFollowCamera: cursorFollowCameraRef.current,
 				});
+				zoomTargetRef.current = target;
 
 				const state = animationStateRef.current;
 
