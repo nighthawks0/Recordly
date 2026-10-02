@@ -121,6 +121,7 @@ export function EditorShell(props: Props) {
 	} = projectController;
 	const {
 		cursor,
+		typingTelemetry,
 		projection,
 		audio,
 		playback,
@@ -394,6 +395,7 @@ export function EditorShell(props: Props) {
 					videoSourcePath={project.videoSourcePath}
 					cursorTelemetrySourcePath={timeline.cursorTelemetrySourcePath}
 					normalizedCursorTelemetry={cursor.normalizedCursorTelemetry}
+					typingTelemetry={typingTelemetry}
 					autoSuggestZoomsTrigger={ui.autoSuggestZoomsTrigger}
 					handleAutoSuggestZoomsConsumed={handleAutoSuggestZoomsConsumed}
 					disableSuggestedZooms={!appearance.autoApplyFreshRecordingAutoZooms}

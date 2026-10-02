@@ -127,6 +127,38 @@ describe("computeCamera3DTransform", () => {
 		// A pure dolly tilts nothing, so it must not inflate the frame either.
 		expect(computeCamera3DTransform(resolveCamera3DState("dolly"), STAGE).scale).toBe(1);
 	});
+
+	/**
+	 * Regression: the original mapping divided the angle by 90 and passed the
+	 * result straight through, giving an 8-degree preset a skew of 0.037. On a
+	 * 1080px stage that shifts the frame edge by ~20px out of 960 — visually
+	 * indistinguishable from no tilt, which the render verification caught by
+	 * measuring the rendered pixels rather than the returned numbers.
+	 *
+	 * These bounds pin the skew to a range that is actually visible.
+	 */
+	it("produces a visibly perceptible shear, not a negligible one", () => {
+		for (const preset of ["tilt-left", "tilt-right"] as const) {
+			const { skewX } = computeCamera3DTransform(resolveCamera3DState(preset), STAGE);
+			// Visible: at least ~10% of the stage height.
+			expect(Math.abs(skewX)).toBeGreaterThan(0.1);
+			// Tasteful: not a full quarter of the frame.
+			expect(Math.abs(skewX)).toBeLessThan(0.3);
+		}
+	});
+
+	it("keeps every preset's rendered edge displacement within a readable range", () => {
+		// A skew of s displaces the frame edge by s * stageHeight.
+		for (const preset of Object.keys(CAMERA_3D_PRESETS) as Array<keyof typeof CAMERA_3D_PRESETS>) {
+			// "dolly" is a pure forward push with no rotation, so it correctly
+			// produces no shear; only the tilt presets are bounded here.
+			if (preset === "dolly") continue;
+			const { skewX, skewY } = computeCamera3DTransform(resolveCamera3DState(preset), STAGE);
+			const displacementPx = (Math.abs(skewX) + Math.abs(skewY)) * STAGE.height;
+			expect(displacementPx).toBeGreaterThan(40);
+			expect(displacementPx).toBeLessThan(320);
+		}
+	});
 });
 
 describe("applyCamera3DTransform", () => {

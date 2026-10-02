@@ -132,12 +132,23 @@ export function computeCamera3DTransform(
 	const skewX = clamp((state.rotateY / 90) * perspective, -1, 1);
 	const skewY = clamp((state.rotateX / 90) * perspective, -1, 1);
 
+	// PixiJS skew is a shear coefficient, not an angle: a 0.2 skew shifts the
+	// top edge by 20% of the container's height. Dividing degrees by 90 put an
+	// 8-degree tilt at 0.037, which is visually indistinguishable from no tilt
+	// at all (measured: the top-left registration mark moved 2px). What
+	// actually reads as depth is a shear of roughly 0.12-0.22 for a tasteful
+	// tilt and ~0.3 at the strongest setting, so the angle is mapped through
+	// this factor rather than straight to tan().
+	const skewScale = 5;
+	const skewXOut = clamp(skewX * skewScale, -1, 1);
+	const skewYOut = clamp(skewY * skewScale, -1, 1);
+
 	// A tilt shortens one axis, so scale up slightly to keep the framed
 	// content filling the stage instead of leaving a gap.
-	const shrink = Math.abs(skewX) + Math.abs(skewY);
+	const shrink = Math.abs(skewXOut) + Math.abs(skewYOut);
 	const scale = 1 + shrink * 0.35;
 
-	return { skewX, skewY, scale };
+	return { skewX: skewXOut, skewY: skewYOut, scale };
 }
 
 /**
