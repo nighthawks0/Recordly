@@ -53,3 +53,6 @@ playwright-report/
 # Render-verification output frames (regenerate: node scripts/verify-camera-render.mjs)
 verification/*.png
 verification/manifest.json
+
+# Locally downloaded build artifacts (190MB installer) - not for git
+dist-download/
