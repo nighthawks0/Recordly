@@ -40,6 +40,33 @@ export interface CursorTelemetryPoint {
 		| "not-allowed";
 }
 
+/**
+ * One keystroke, recorded without the character and without the raw key code.
+ *
+ * This mirrors `TypingTelemetryPoint` in electron/ipc/types.ts. The duplication
+ * matches the existing `CursorTelemetryPoint` pattern in this file; the two
+ * declarations must be kept in step.
+ */
+export type TypingKeyClass =
+	| "printable"
+	| "space"
+	| "enter"
+	| "backspace"
+	| "delete"
+	| "tab"
+	| "escape"
+	| "arrow"
+	| "navigation"
+	| "shortcut"
+	| "other";
+
+export interface TypingTelemetryPoint {
+	timeMs: number;
+	cx: number;
+	cy: number;
+	keyClass: TypingKeyClass;
+}
+
 export interface CursorVisualSettings {
 	size: number;
 	smoothing: number;
