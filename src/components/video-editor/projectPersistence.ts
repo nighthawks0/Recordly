@@ -127,6 +127,7 @@ export interface ProjectEditorState {
 	cameraSpringMassMultiplier: number;
 	zoomSmoothness: number;
 	zoomClassicMode: boolean;
+	zoom3DEnabled: boolean;
 	cursorMotionBlur: number;
 	cursorClickBounce: number;
 	cursorClickBounceDuration: number;
@@ -970,6 +971,10 @@ const normalizedZoomRegions: ZoomRegion[] = Array.isArray(editor.zoomRegions)
 		zoomSmoothness: DEFAULT_ZOOM_SMOOTHNESS,
 		zoomClassicMode:
 			typeof editor.zoomClassicMode === "boolean" ? editor.zoomClassicMode : false,
+		// Default true: a project saved before this setting existed must keep 3D
+		// enabled, not silently fall back to 2D.
+		zoom3DEnabled:
+			typeof editor.zoom3DEnabled === "boolean" ? editor.zoom3DEnabled : true,
 		cursorMotionBlur: DEFAULT_CURSOR_MOTION_BLUR,
 		cursorClickBounce: normalizedMotionPreset.cursorClickBounce,
 		cursorClickBounceDuration: normalizedMotionPreset.cursorClickBounceDuration,

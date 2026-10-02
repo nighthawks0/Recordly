@@ -78,6 +78,7 @@ export function resolveSceneZoomTarget({
 	zoomClassicMode,
 	cursorTelemetry,
 	cursorFollowCamera,
+	zoom3DEnabled = true,
 }: {
 	zoomRegions: ZoomRegion[];
 	timeMs: number;
@@ -88,6 +89,12 @@ export function resolveSceneZoomTarget({
 	zoomClassicMode?: boolean;
 	cursorTelemetry?: CursorTelemetryPoint[];
 	cursorFollowCamera: CursorFollowCameraState;
+	/**
+	 * Global 2D/3D switch. When false the 3D move is resolved out entirely, so
+	 * every region plays as a plain 2D zoom regardless of its own `move3d`.
+	 * Defaults to true so 3D is opt-out and existing 3D projects keep working.
+	 */
+	zoom3DEnabled?: boolean;
 }): SceneZoomTarget {
 	const { region, strength, blendedScale } = findDominantRegion(zoomRegions, timeMs, {
 		connectZooms,
@@ -118,5 +125,14 @@ export function resolveSceneZoomTarget({
 		);
 	}
 
-	return { scale, focus, progress: strength, move3d: resolveRegion3DState(region.move3d) };
+	return {
+		scale,
+		focus,
+		progress: strength,
+		// Gate here, at the one place all three renderers read from, so the switch
+		// can never make the preview disagree with an export.
+		move3d: zoom3DEnabled
+			? resolveRegion3DState(region.move3d)
+			: ZERO_CAMERA_3D_STATE,
+	};
 }

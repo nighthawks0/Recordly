@@ -158,6 +158,7 @@ interface FrameRenderConfig {
 	cursorSway?: number;
 	zoomSmoothness?: number;
 	zoomClassicMode?: boolean;
+	zoom3DEnabled?: boolean;
 	nativeReadbackMode?: "pixels" | "canvas";
 }
 
@@ -3133,6 +3134,7 @@ export class FrameRenderer {
 			zoomInDurationMs: this.config.zoomInDurationMs,
 			zoomOutDurationMs: this.config.zoomOutDurationMs,
 			zoomClassicMode: this.config.zoomClassicMode,
+			zoom3DEnabled: this.config.zoom3DEnabled ?? true,
 			cursorTelemetry: this.config.cursorTelemetry,
 			cursorFollowCamera: this.cursorFollowCamera,
 		});

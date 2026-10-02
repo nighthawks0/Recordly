@@ -277,6 +277,7 @@ interface VideoPlaybackProps {
 	cameraSpringMassMultiplier?: number;
 	zoomSmoothness?: number;
 	zoomClassicMode?: boolean;
+	zoom3DEnabled?: boolean;
 	zoomMotionBlur?: number;
 	zoomMotionBlurTuning?: ZoomMotionBlurTuning;
 	cursorMotionBlur?: number;
@@ -363,6 +364,7 @@ const VideoPlayback = forwardRef<VideoPlaybackRef, VideoPlaybackProps>(
 			cameraSpringMassMultiplier = 1.12,
 			zoomSmoothness = 0.5,
 			zoomClassicMode = false,
+		zoom3DEnabled = true,
 			zoomMotionBlur = DEFAULT_ZOOM_MOTION_BLUR,
 			zoomMotionBlurTuning = DEFAULT_ZOOM_MOTION_BLUR_TUNING,
 			cursorMotionBlur = DEFAULT_CURSOR_MOTION_BLUR,
@@ -533,6 +535,7 @@ const VideoPlayback = forwardRef<VideoPlaybackRef, VideoPlaybackProps>(
 		const lastRenderedContentTimeRef = useRef<number | null>(null);
 		const zoomSmoothnessRef = useRef(zoomSmoothness);
 		const zoomClassicModeRef = useRef(zoomClassicMode);
+		const zoom3DEnabledRef = useRef(zoom3DEnabled);
 		const cursorFollowCameraRef = useRef<CursorFollowCameraState>(
 			createCursorFollowCameraState(),
 		);
@@ -1508,8 +1511,9 @@ const VideoPlayback = forwardRef<VideoPlaybackRef, VideoPlaybackProps>(
 
 		useEffect(() => {
 			zoomClassicModeRef.current = zoomClassicMode;
+			zoom3DEnabledRef.current = zoom3DEnabled;
 			requestPausedFrameRefresh();
-		}, [zoomClassicMode, requestPausedFrameRefresh]);
+		}, [zoomClassicMode, zoom3DEnabled, requestPausedFrameRefresh]);
 
 		useEffect(() => {
 			cursorMotionBlurRef.current = cursorMotionBlur;
@@ -2098,6 +2102,7 @@ const VideoPlayback = forwardRef<VideoPlaybackRef, VideoPlaybackProps>(
 					zoomInDurationMs: zoomInDurationMsRef.current,
 					zoomOutDurationMs: zoomOutDurationMsRef.current,
 					zoomClassicMode: zoomClassicModeRef.current,
+					zoom3DEnabled: zoom3DEnabledRef.current,
 					cursorTelemetry: cursorTelemetryRef.current,
 					cursorFollowCamera: cursorFollowCameraRef.current,
 				});
